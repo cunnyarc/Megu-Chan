@@ -1,0 +1,17 @@
+{
+    "common": {
+        "1": {
+            "name": "Party popper",
+            "desc": "Make a *pop* with this fun item",
+            "cost": "15"
+        },
+        "2": {
+
+        }
+    },
+    "uncommon": {
+        "number": {
+            "name": "Name"
+        }
+    }
+}
