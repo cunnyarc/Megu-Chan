@@ -3,10 +3,13 @@ from discord.ext import commands
 import os
 import datetime
 import utils
-import secrets
+import json
 
-client = commands.Bot(commands.when_mentioned_or(*['y! ', 'y!']), description="Anime Freaks Disord Bot")
-token = ""
+with open("secrets.json", "r") as f:
+        secrets = json.load(f)
+
+client = commands.Bot(commands.when_mentioned_or(secrets["Masumi-Prefixes"]), description=secrets["Masumi-Description"])
+token = secrets["Masumi-Token"]
 client.remove_command('help')
 start_time = datetime.datetime.utcnow()
 logging_channel = discord.utils.get(client.get_all_channels(), guild__name="Test", name="logs",
