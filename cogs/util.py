@@ -26,7 +26,7 @@ class Util(commands.Cog, name="Utility"):
         # Shows all commands if no argument was given
         if cog == "All":
             emb = discord.Embed(color=0xbc25cf,
-                                description="**Hello there! I'm Yuuki** \n Below you can see a list of commands that I know. \n")
+                                description="**Hello there! I'm Masumi-Chan!** \n Below you can see a list of commands that I know. \n")
 
             for c in self.client.cogs:
                 if c == "Dev":
@@ -36,8 +36,8 @@ class Util(commands.Cog, name="Utility"):
                               inline=False)
 
             emb.add_field(name="\u200b",
-                          value="**Use `y! help [Command | Category]` for more information.**\n \n"
-                                "**Example:** `y! help profile` **for detailed help for the profile command.**", inline=False)
+                          value="**Use `m! help [Command | Category]` for more information.**\n \n"
+                                "**Example:** `m! help profile` **for detailed help for the profile command.**", inline=False)
 
         # Shows the cog and the cog's command if the argument was a cog
         elif cog in self.client.cogs:

@@ -46,14 +46,30 @@ class Fun(commands.Cog, name='Fun'):
     async def flip(self, ctx):
         """Flips a coin"""
 
-        """ outcome = random.choice("heads", "tails")
-
-        flip = discord.Embed(color=0xbc25cf, title=f"{ctx.author.mention} flips a coin!",
-                             description="Pick heads or tails!")
+        coin = ["regional_indicator_h", "regional_indicator_t"]
+        outcome = random.choice(coin)
         reactions = ["regional_indicator_h", "regional_indicator_t"]
+        flip = discord.Embed(color=0xbc25cf, title=f"{ctx.author} wants to flip a coin!",
+                             description="heads or tails?")
+
+        message = await ctx.send(embed=flip)
 
         for r in reactions:
-            await self.client.add_reaction(flip, emoji=r) """
+            await message.add_reaction(emoji=r)
+
+        def check(reaction):
+            return reaction == ctx.message.author and str(reaction.add) == "regional_indicator_h" or "regional_indicator_t"
+
+        try:
+            reaction = await self.client.wait_for('reaction_add', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await message.edit(content="Looks like you didn't want to play :disappointed:")
+        else:
+            if reaction == outcome:
+                await message.edit(content="Congrats! You won!")
+
+            else:
+                await message.edit(content=f"Ouch, better luck next time it was {outcome[-19:]}")
 
     @commands.command(name="rateme", description="`y! rateme [user]`")
     async def rateme(self, ctx, user=None):
@@ -63,6 +79,8 @@ class Fun(commands.Cog, name='Fun'):
 
         emb = discord.Embed(color=0xbc25cf, description=f"I rate {user.mention} a {rating}/10")
         emb.set_image(url=user.avatar_url)
+
+        await ctx.send(embed=emb)
 
     @commands.command(name="fortune", description="`y! fortune")
     async def fortune(self, ctx, *, question=None):

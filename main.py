@@ -8,7 +8,7 @@ import json
 with open("secrets.json", "r") as f:
         secrets = json.load(f)
 
-client = commands.Bot(commands.when_mentioned_or(secrets["Masumi-Prefixes"]), description=secrets["Masumi-Description"])
+client = commands.Bot(commands.when_mentioned_or(*['m! ', 'm!']), description=secrets["Masumi-Description"])
 token = secrets["Masumi-Token"]
 client.remove_command('help')
 start_time = datetime.datetime.utcnow()
