@@ -3,4 +3,3 @@ secrets.json
 server.json
 .vscode/
 __pycache__/
-cogs/__pycache__/
