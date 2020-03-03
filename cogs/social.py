@@ -46,7 +46,7 @@ class Social(commands.Cog, name="Social"):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if len(message.content) < 5 or message.author.bot or 'y! ' in message.content:
+        if len(message.content) < 5 or message.author.bot or 'm! ' in message.content:
             return
 
         if "https://discord.gg" in message.content:
