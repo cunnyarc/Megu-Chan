@@ -46,10 +46,10 @@ class Social(commands.Cog, name="Social"):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if len(message.content) < 5 or message.author.bot or 'y! ' in message.content:
+        if len(message.content) < 5 or message.author.bot or 'm! ' in message.content:
             return
 
-        if "https://discord.gg" in message.content:
+        if "https://discord.gg" or "invite.gg/" or "discord.me/" in message.content:
             await discord.Message.delete(message)
             emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), title=":bangbang: Invite Deleted",
                                 description=f"An invite was sent by {message.author.mention} in {message.channel}")

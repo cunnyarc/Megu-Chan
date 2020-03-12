@@ -36,6 +36,7 @@ async def on_ready():
     await client.change_presence(activity=discord.Game("m! help"))
 
 
+# On events
 @client.event
 async def on_member_join(member: discord.Member):
     # Logging to channel when member joins
@@ -55,6 +56,30 @@ async def on_member_remove(member: discord.Member):
     emb.set_author(name=":worried: Member Left", icon_url=member.avatar_url)
     emb.add_field(name=member.mention, value=member.name, inline=False)
     emb.set_footer(text=f"ID: {member.id}")
+
+    await logging_channel.send(embed=emb)
+
+@client.event
+async def on_bulk_message_delete(messages):
+    emb = discord.Embed(color=discord.Color.red(), timestamp=datetime.datetime.utcnow(), description=f"**{len(messages)} messages were deleted**")
+    emb.set_author(name=f"**Bulk Message Delete in {messages.channel}**", icon_url=messages.guild.icon_url)
+
+    await logging_channel.send(embed=emb)
+
+@client.event
+async def on_message_delete(message):
+    emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=message.content)
+    emb.set_author(name=f"**A message sent by {message.author} deleted in {message.channel}")
+    emb.set_footer(text=f"Author: {message.author.id} | Message ID: {message.id}")
+
+    await logging_channel.send(embed=emb)
+
+@client.event
+async def on_message_edit(before, after):
+    emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"**Message edit in {after.channel} [Jump To Message](https://discordapp.com/channels/{after.channel.guild.id}/{after.channel.id}/{after.id})")
+    emb.set_author(name=after.author.name, icon_url=after.author.avatar_url)
+    emb.add_field(name="Before", value=before, inline=False)
+    emb.add_field(name="After", value=after, inline=False)
 
     await logging_channel.send(embed=emb)
 
