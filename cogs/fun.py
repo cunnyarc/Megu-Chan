@@ -42,35 +42,6 @@ class Fun(commands.Cog, name='Fun'):
         await discord.Message.delete(message)
         await ctx.send("( ͡° ͜ʖ ͡°)")
 
-    @commands.command(name="flip", description="`y! flip")
-    async def flip(self, ctx):
-        """Flips a coin"""
-
-        coin = ["regional_indicator_h", "regional_indicator_t"]
-        outcome = random.choice(coin)
-        reactions = ["regional_indicator_h", "regional_indicator_t"]
-        flip = discord.Embed(color=0xbc25cf, title=f"{ctx.author} wants to flip a coin!",
-                             description="heads or tails?")
-
-        message = await ctx.send(embed=flip)
-
-        for r in reactions:
-            await message.add_reaction(emoji=r)
-
-        def check(reaction):
-            return reaction == ctx.message.author and str(reaction.add) == "regional_indicator_h" or "regional_indicator_t"
-
-        try:
-            reaction = await self.client.wait_for('reaction_add', timeout=60.0, check=check)
-        except asyncio.TimeoutError:
-            await message.edit(content="Looks like you didn't want to play :disappointed:")
-        else:
-            if reaction == outcome:
-                await message.edit(content="Congrats! You won!")
-
-            else:
-                await message.edit(content=f"Ouch, better luck next time it was {outcome[-19:]}")
-
     @commands.command(name="rateme", description="`y! rateme [user]`")
     async def rateme(self, ctx, user=None):
         """Rates a user from 1-10"""
@@ -89,7 +60,7 @@ class Fun(commands.Cog, name='Fun'):
         outcomes = ["Positive", "Neutral", "Negative"]
         replyPos = ["It is certain!~", "Without a doubt!", "Definitely!", "Outlook good!"]
         replyNeu = ["Reply hazy, try again later", "Ask again later", "Better not tell you now"]
-        replyNeg = ["Don't count on it...", "I'd say no...", "Very doubtful..."]
+        replyNeg = ["Don't count on it baka...", "I'd say no...", "Very doubtful..."]
 
         if len(question) <= 5 or " " not in question:
             return
