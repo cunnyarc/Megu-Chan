@@ -6,15 +6,15 @@ import utils
 import json
 
 with open("secrets.json", "r") as f:
-        secrets = json.load(f)
+    secrets = json.load(f)
 
+with open("server.json") as f:
+    users = json.load(f)
+ 
 client = commands.Bot(commands.when_mentioned_or(*['m! ', 'm!']), description=secrets["Masumi-Description"])
 token = secrets["Masumi-Token"]
 client.remove_command('help')
 start_time = datetime.datetime.utcnow()
-logging_channel = discord.utils.get(client.get_all_channels(), guild__name="Test", name="logs",
-                                    type=discord.ChannelType.text)
-
 
 @client.event
 async def on_ready():
@@ -24,7 +24,7 @@ async def on_ready():
             continue
         else:
             try:
-                client.load_extension("cogs.{}".format(e[:-3]))
+                client.load_extension(f"cogs.{e[:-3]}")
                 print(f"Successfully loaded {e[:-3]}")
             except Exception as e:
                 print(f"Error loading {e[:-3]}")
@@ -32,56 +32,10 @@ async def on_ready():
 
     # Printing when successfully logged in
     await client.wait_until_ready()
+    global logging
+    logging = client.get_channel(657975745389527051)
     print(f"Successfully logged into {client.user.name}")
     await client.change_presence(activity=discord.Game("m! help"))
-
-
-# On events
-@client.event
-async def on_member_join(member: discord.Member):
-    # Logging to channel when member joins
-    emb = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
-    emb.set_author(name=":tada: Member Joined", icon_url=member.avatar_url)
-    emb.add_field(name=member.mention, value=member.name, inline=False)
-    emb.set_footer(text=f"ID: {member.id}")
-
-    await member.add_roles(662110138018299904, atomic=True)
-    await logging_channel.send(embed=emb)
-
-
-@client.event
-async def on_member_remove(member: discord.Member):
-    # Logging to channel when member is removed
-    emb = discord.Embed(color=discord.Color.red(), timestamp=datetime.datetime.utcnow())
-    emb.set_author(name=":worried: Member Left", icon_url=member.avatar_url)
-    emb.add_field(name=member.mention, value=member.name, inline=False)
-    emb.set_footer(text=f"ID: {member.id}")
-
-    await logging_channel.send(embed=emb)
-
-@client.event
-async def on_bulk_message_delete(messages):
-    emb = discord.Embed(color=discord.Color.red(), timestamp=datetime.datetime.utcnow(), description=f"**{len(messages)} messages were deleted**")
-    emb.set_author(name=f"**Bulk Message Delete in {messages.channel}**", icon_url=messages.guild.icon_url)
-
-    await logging_channel.send(embed=emb)
-
-@client.event
-async def on_message_delete(message):
-    emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=message.content)
-    emb.set_author(name=f"**A message sent by {message.author} deleted in {message.channel}")
-    emb.set_footer(text=f"Author: {message.author.id} | Message ID: {message.id}")
-
-    await logging_channel.send(embed=emb)
-
-@client.event
-async def on_message_edit(before, after):
-    emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"**Message edit in {after.channel} [Jump To Message](https://discordapp.com/channels/{after.channel.guild.id}/{after.channel.id}/{after.id})")
-    emb.set_author(name=after.author.name, icon_url=after.author.avatar_url)
-    emb.add_field(name="Before", value=before, inline=False)
-    emb.add_field(name="After", value=after, inline=False)
-
-    await logging_channel.send(embed=emb)
 
 
 @client.event
@@ -116,7 +70,6 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(embed=err_emb)
-
 
 if __name__ == "__main__":
     client.run(token)
