@@ -1,37 +1,34 @@
 import discord
 import datetime
-import json
 from discord.ext import commands
 from slugify import slugify
+import json
 
 
 class Util(commands.Cog, name="Utility"):
     """⚙️ Utility"""
-
     def __init__(self, client):
         self.client = client
         with open('config.json') as config:
-            self.config = json.load(config)
-
-        self.logging = self.client.get_channel(self.config['log_channel'])
-        self.blacklist_words = self.config['blacklist_words']
-        self.blacklist_links = self.config['blacklist_links']
+            json.load(config)
+        self.logging = self.client.get_channel(config["log_channel"])
+        self.blacklist_words = config["blacklist_words"]
+        self.blacklist_links = config["blacklist_links"]
 
         with open('server.json') as f:
             self.users = json.load(f)
 
     async def do_slugify(self, string):
         string = slugify(string)
-        replacements = (('4', 'a'), ('@', 'a'), ('3', 'e'),
-                        ('1', 'i'), ('0', 'o'), ('7', 't'), ('5', 's'))
+        replacements = (('4', 'a'), ('@', 'a'), ('3', 'e'), ('1', 'i'), ('0', 'o'), ('7', 't'), ('5', 's'))
         for old, new in replacements:
             string = string.replace(old, new)
 
-        return string
+        return string   
 
-    async def update_json(self, file, data):
+    async def update_json(self, file):
         with open(file, 'w') as f:
-            json.dump(data, f, indent=4)
+            json.dump(file, f, indent=4) 
 
     @commands.command(name="help", description="`m! help [Command]`")
     @commands.bot_has_permissions(embed_links=True, send_messages=True)
@@ -69,17 +66,14 @@ class Util(commands.Cog, name="Utility"):
 
         # Shows command's info and usage if the argument wasn't a cog
         else:
-            all_commands = [
-                c.name for c in self.client.commands if not c.hidden]
+            all_commands = [c.name for c in self.client.commands if not c.hidden]
             cog_lo = cog.lower()
 
             if cog.lower() in all_commands:
                 emb = discord.Embed(color=0xbc25cf, title=f'{cog_lo} command')
 
-                emb.add_field(
-                    name="Usage:", value=self.client.get_command(cog_lo).description)
-                emb.add_field(name="Description:",
-                              value=self.client.get_command(cog_lo).short_doc)
+                emb.add_field(name="Usage:", value=self.client.get_command(cog_lo).description)
+                emb.add_field(name="Description:", value=self.client.get_command(cog_lo).short_doc)
 
             # Shows an error message if the given argument fails all statements
             else:
@@ -101,7 +95,7 @@ class Util(commands.Cog, name="Utility"):
                     await discord.Message.delete(message)
 
             except discord.errors.NotFound:
-                continue
+                break
 
     @commands.command(name="kick", description="`y! kick <User>`")
     @commands.guild_only()
@@ -144,8 +138,7 @@ class Util(commands.Cog, name="Utility"):
         emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was unbanned by "
                                                                                               f"{ctx.author} with reason"
                                                                                               f"`{reason}`")
-        emb.set_author(name=":bangbang: User Unbanned",
-                       icon_url=user.avatar_url)
+        emb.set_author(name=":bangbang: User Unbanned", icon_url=user.avatar_url)
 
         await user.unban(reason=reason)
         await self.logging.send(embed=emb)
@@ -161,8 +154,7 @@ class Util(commands.Cog, name="Utility"):
         emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was softbanned by "
                                                                                               f"{ctx.author} with reason"
                                                                                               f"`{reason}`")
-        emb.set_author(name=":bangbang: User softbanned",
-                       icon_url=user.avatar_url)
+        emb.set_author(name=":bangbang: User softbanned", icon_url=user.avatar_url)
 
         await user.ban(reason=reason, delete_message_days=7)
         await user.unban(reason=reason)
@@ -225,29 +217,30 @@ class Util(commands.Cog, name="Utility"):
                                                                                          "refreshed")
         await self.logging.send(embed=emb)
 
-    @commands.group(name="wordblacklist", aliases=['wbl'], invoke_without_command=True, description="m! wordblacklist <add/remove> <words>")
+    @commands.group(name="wordblacklist", aliases=["wbl"], invoke_without_command=True, description="m! wordblacklist <add/remove> <words>")
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def word_blacklist(self, ctx):
         """Sets up a blacklist of words that will be deleted once said"""
-        await ctx.send("```Usage: m! wordblacklist add <word>\n!wordblacklist remove <word>\n!wordblacklist show```")
+        await ctx.send("```Usage: !wordblacklist add <word>\n!wordblacklist remove <word>\n!wordblacklist show```")
 
     @word_blacklist.command(name="add")
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)   
     async def add_word(self, ctx, *, blacklist_words: list):
         if len(blacklist_words) <= 0:
-            await ctx.send("You need to specify a word/words to blacklist")
+            await ctx.send("You need to specify a word/words to blacklisted")
 
         for bl_word in blacklist_words:
-            slug_word = await self.do_slugify(bl_word)
+            slug_word = self.do_slugify(bl_word)
 
             if slug_word in self.blacklist_words:
                 await ctx.send(f"{slug_word} is already in your blacklist!")
                 continue
+            
+            self.blacklist_words[f"{slug_word}"]
+            self.update_json(self.blacklist_words)
 
-            self.blacklist_words[f'{slug_word}']
-            await self.update_json('config.json', self.blacklist_words)
 
     @word_blacklist.command(name="remove")
     @commands.guild_only()
@@ -257,108 +250,101 @@ class Util(commands.Cog, name="Utility"):
             await ctx.send("You need to specify a word/words to remove")
 
         for remove_word in remove_words:
-            slug_word = await self.do_slugify(remove_word)
+            slug_word = self.do_slugify(remove_word)
 
             if slug_word not in self.blacklist_words:
                 await ctx.send(f"{slug_word} is not in the blacklist")
                 continue
 
-            self.blacklist_words[f'{slug_word}'].pop()
-            await self.update_json('config.json', self.blacklist_words)
+            self.blacklist_words[f"{slug_word}"].pop()
+            self.update_json(self.blacklist_words)
 
     @word_blacklist.command(name="list")
     @commands.guild_only()
     async def list_words(self, ctx):
-        if len(self.blacklist_words) <= 0:
-            await ctx.send("You don't have any blacklisted words!")
-        else:
-            await ctx.send("Heres a list of the words " + "` `".join(self.blacklist_words))
+        await ctx.send("Heres a list of the words " + "` `".join(self.blacklist_words))
+    
 
-    @commands.group(name="linkblacklist", aliases=['lbl'], invoke_without_command=True, description="m! linklacklist <add/remove> <links>")
+    @commands.group(name="linkblacklist", aliases=["lbl"], invoke_without_command=True, description="m! linkblacklist <add/remove> <links>")
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def link_blacklist(self, ctx):
-        """Sets up a blacklist of words that will be deleted once said"""
-        await ctx.send("```Usage: m! linkblacklist add <link>\nm! linkblacklist remove <link>\nm! linkblacklist show```")
+       """Sets up a blacklist of words that will be deleted once said"""
+       await ctx.send("```Usage: !linkblacklist add <word>\n!linkblacklist remove <word>\n!linkblacklist show```")
 
     @link_blacklist.command(name="add")
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def add_link(self, ctx, *, add_links: list):
-        if len(add_links) <= 0:
-            await ctx.send("You need to specify a word/words to add")
+    @commands.has_permissions(manage_guild=True)   
+    async def add_link(self, ctx, *, blacklist_links: list):
+        if len(blacklist_links) <= 0:
+            await ctx.send("You need to specify a link/linkss to blacklisted")
 
-        for add_link in add_links:
-            slug_word = await self.do_slugify(add_link)
+        for bl_link in blacklist_links:
+            slug_word = self.do_slugify(bl_link)
 
-            if slug_word in self.blacklist_links:
-                await ctx.send(f"{slug_word} is already in the blacklist")
+            if slug_word in self.blacklist_words:
+                await ctx.send(f"{slug_word} is already in your blacklist!")
                 continue
-
-            self.blacklist_links[f'{self.blacklist_links}']
-            await self.update_json('config.json', self.blacklist_links)
+                
+            self.blacklist_links[f"{slug_word}"]
+            self.update_json(self.blacklist_links)    
 
     @link_blacklist.command(name="remove")
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
-    async def remove_link(self, ctx, *, remove_links: list):
+    async def remove_links(self, ctx, *, remove_links: list):
         if len(remove_links) <= 0:
-            await ctx.send("Please specify a link/links to remove")
+            await ctx.send("You need to specify a word/words to remove")
 
         for remove_link in remove_links:
             slug_word = self.do_slugify(remove_link)
 
             if slug_word not in self.blacklist_links:
-                await ctx.send(f"{slug_word} is not in your blacklist")
+                await ctx.send(f"{slug_word} is not in the blacklist")
                 continue
 
-            self.blacklist_links[f'{slug_word}'].pop()
-            await self.update_json('config.json', self.blacklist_links)
+            self.blacklist_links[f"{slug_word}"].pop()
+            await self.update_json(self.blacklist_links)
 
     @link_blacklist.command(name="list")
     @commands.guild_only()
     async def list_links(self, ctx):
-        if len(self.blacklist_links) <= 0:
-            await ctx.send("You don't have any blacklisted links!")
-        else:
-            await ctx.send("Heres a list of the links " + "` `".join(self.blacklist_links))
+        await ctx.send("Heres a list of the links " + "` `".join(self.blacklist_links))
 
-    # Cog Listeners
+    # Logging Events
     @commands.Cog.listener()
     async def on_message(self, message):
+
         if message.author.bot:
             return
 
         if message.guild is None:
             return
 
-        msg = await self.do_slugify(message.content)
+        msg = self.do_slugify(message.content)
 
         for bl_word in self.blacklist_words:
             if bl_word in msg:
                 try:
                     await message.delete()
                     await message.channel.send(f"{message.author.mention} your message was removed for containing a blacklisted word")
-                    return
+                    break
                 except Exception as e:
                     await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
-                    return
+                    break
 
         for link in self.blacklist_links:
-            if link in message.content:
-                try:
-                    await message.delete()
-                    await self.logging.send("An invite was sent")
-                    return
-                except Exception as e:
-                    await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
-                    return
-
+            if link in msg:
+                await message.delete()
+                await self.logging.send("An invite was sent")
+                break
+            
         await self.update_data(message.author)
         await self.lvl_up(message.author, message.channel)
 
         self.users[f'{message.author.id}']['exp'] += 1
-        await self.update_json('server.json', self.users)
+        await self.update_json(self.users)
+
 
     async def update_data(self, user):
         if f'{user.id}' not in self.users:
@@ -378,11 +364,11 @@ class Util(commands.Cog, name="Utility"):
             self.users[f'{user.id}']['lvl'] += 1
             self.users[f'{user.id}']['exp'] = 0
 
-            self.update_json('server.json', self.users)
+            self.update_json(self.users)
 
             if self.users[f'{user.id}']['msg'] is True:
                 await channel.send(f"{user.mention} just leveled up to level {self.users[f'{user.id}']['lvl']} \n"
-                                   f":information_source: `y! disabletext` to disable this message")
+                                f":information_source: `y! disabletext` to disable this message")
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -398,7 +384,7 @@ class Util(commands.Cog, name="Utility"):
 
     @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages):
-        await self.logging.send(f"{len(messages)} messages deleted in {messages.channel.mention}")
+        await self.logging.send(f"{len(messages)} messages deleted in {messages.channel.mention}") 
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -406,16 +392,17 @@ class Util(commands.Cog, name="Utility"):
             return
 
         emb = discord.Embed(color=0xbc25cf)
-        emb.add_field(name="Message Deleted",
-                      value=f"💮UserName: {message.author.display_name} \n"
-                      f"💮Ping: {message.author.mention} \n"
-                      f"💮ID: {message.author.id} \n"
-                      f"💮Channel: {message.channel}",
-                      inline=False
-                      )
+        emb.add_field(name="Message Deleted", 
+        value=f"💮UserName: {message.author.display_name} \n"
+            f"💮Ping: {message.author.mention} \n"
+            f"💮ID: {message.author.id} \n"
+            f"💮Channel: {message.channel}",
+            inline=False
+        )
         emb.add_field(name="Message", value=message.content)
         emb.set_footer(text=message.author)
         emb.set_thumbnail(url=message.author.avatar_url)
+        
 
         await self.logging.send(embed=emb)
 
@@ -424,19 +411,21 @@ class Util(commands.Cog, name="Utility"):
         if before.author.bot or before.content == after.content:
             return
 
-        emb = discord.Embed(
-            color=0xbc25cf, timestamp=datetime.datetime.utcnow())
-        emb.add_field(name="Message Edited",
-                      value=f"💮**UserName:** {before.author.display_name} \n"
-                      f"💮**Ping:** {before.author.mention} \n"
-                      f"💮**ID:** {before.author.id} \n"
-                      f"💮**URL:** **[Jump To Message]({after.jump_url})**",
-                      inline=False
-                      )
+        
+
+        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow())
+        emb.add_field(name="Message Edited", 
+        value=f"💮**UserName:** {before.author.display_name} \n"
+            f"💮**Ping:** {before.author.mention} \n"
+            f"💮**ID:** {before.author.id} \n"
+            f"💮**URL:** **[Jump To Message]({after.jump_url})**",
+            inline=False
+        )
         emb.add_field(name="Before", value=before.content, inline=True)
         emb.add_field(name="After", value=after.content, inline=True)
         emb.set_footer(text=before.author)
         emb.set_thumbnail(url=before.author.avatar_url)
+        
 
         await self.logging.send(embed=emb)
 

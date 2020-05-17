@@ -10,11 +10,13 @@ with open("secrets.json", "r") as f:
 
 with open("server.json") as f:
     users = json.load(f)
- 
-client = commands.Bot(commands.when_mentioned_or(*['m! ', 'm!']), description=secrets["Masumi-Description"])
+
+client = commands.Bot(commands.when_mentioned_or(
+    *['m! ', 'm!']), description=secrets["Masumi-Description"])
 token = secrets["Masumi-Token"]
 client.remove_command('help')
 start_time = datetime.datetime.utcnow()
+
 
 @client.event
 async def on_ready():
