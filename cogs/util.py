@@ -33,7 +33,7 @@ class Util(commands.Cog, name="Utility"):
         with open(file, 'w') as f:
             json.dump(data, f, indent=4)
 
-    @commands.command(name="help", description="`m! help [Command]`")
+    @commands.command(name="help", description="`megu help [Command]`")
     @commands.bot_has_permissions(embed_links=True, send_messages=True)
     async def help(self, ctx, cog: str = None):
         """Sends help"""
@@ -53,8 +53,8 @@ class Util(commands.Cog, name="Utility"):
                               inline=False)
 
             emb.add_field(name="\u200b",
-                          value="**Use `m! help [Command | Category]` for more information.**\n \n"
-                                "**Example:** `m! help profile` **for detailed help for the profile command.**", inline=False)
+                          value="**Use `megu help [Command | Category]` for more information.**\n \n"
+                                "**Example:** `megu help profile` **for detailed help for the profile command.**", inline=False)
 
         # Shows the cog and the cog's command if the argument was a cog
         elif cog in self.client.cogs:
@@ -89,239 +89,6 @@ class Util(commands.Cog, name="Utility"):
         emb.set_footer(text="<> = Required, [] = Optional")
 
         await ctx.send(embed=emb)
-
-    @commands.command(name="purge", description="`m! purge [Amount]`", aliases=['prune', 'clear'])
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def clean(self, ctx, amount: int = None):
-        """I will delete a given amount of messages"""
-        for message in ctx.channel.history(before=ctx.message, limit=amount):
-            try:
-                if message.author == self.client.user:
-                    await discord.Message.delete(message)
-
-            except discord.errors.NotFound:
-                continue
-
-    @commands.command(name="kick", description="`y! kick <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.Member, *, reason=None):
-        """Kicks a given user"""
-        if user == ctx.author:
-            await ctx.send("You cannot kick yourself!")
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was kicked by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Kicked", icon_url=user.avatar_url)
-
-        await user.kick(reason=reason)
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="ban", description="`y! ban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, user: discord.Member, *, reason=None):
-        """Bans a given user"""
-        if user == ctx.author:
-            await ctx.send("You cannot ban yourself!")
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was banned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Banned", icon_url=user.avatar_url)
-
-        await user.ban(reason=reason, delete_message_days=1)
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="unban", description="`y! unban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def unban(self, ctx, user: discord.Member, *, reason=None):
-        """Unbans a given user"""
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was unbanned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Unbanned",
-                       icon_url=user.avatar_url)
-
-        await user.unban(reason=reason)
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="softban", description="`y! softban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def softban(self, ctx, user: discord.Member, *, reason=None):
-        """Bans then unbans a user to clear their messages"""
-        if user == ctx.author:
-            await ctx.send("You cannot softban yourself!")
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was softbanned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User softbanned",
-                       icon_url=user.avatar_url)
-
-        await user.ban(reason=reason, delete_message_days=7)
-        await user.unban(reason=reason)
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="mute", description="`y! mute <User>")
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def mute(self, ctx, user: discord.Member, *, reason=None):
-        """Mutes the given user from sending any messages"""
-        if user == ctx.author:
-            await ctx.send("You cannot mute yourself!")
-
-        role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-        if role is None:
-            await ctx.guild.create_role(name="Muted", reason="Bot Mute")
-            role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-            for c in ctx.guild.categories:
-                await c.set_permissions(role, send_messages=False, read_messages=True)
-
-        await user.add_roles(role, reason=reason)
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), title=":bangbang: User muted",
-                            description=f"{user} was muted by {ctx.author.mention} with reason `{reason}`")
-        emb.set_thumbnail(url=user.avatar_url)
-
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="unmute", description="`y! unmute <User>")
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def unmute(self, ctx, user: discord.Member, *, reason=None):
-        """Unmutes the giver user"""
-        if user == ctx.author:
-            await ctx.send("You cannot unmute yourself")
-
-        role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-        await user.remove_roles(role, reason=reason)
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), title=":bangbang: User unmuted",
-                            description=f"{user} was unmuted by {ctx.author.mention} with reason `{reason}`")
-        emb.set_thumbnail(url=user.avatar_url)
-
-        await self.logging.send(embed=emb)
-
-    @commands.command(name="refreshmute", description="`y! refreshmute", hidden=True)
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def refreshmute(self, ctx):
-        """Refreshes the mute command"""
-        role = await discord.utils.get(ctx.guild.roles, name="Muted")
-
-        for c in ctx.guild.categories:
-            await c.set_permissions(role, send_messages=False, read_messages=True)
-
-        emb = discord.Embed(color=0xbc25cf, title="Refreshed Mute Command!", description="The mute command has been "
-                                                                                         "refreshed")
-        await self.logging.send(embed=emb)
-
-    @commands.group(name="wordblacklist", aliases=['wbl'], invoke_without_command=True, description="m! wordblacklist <add/remove> <words>")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def word_blacklist(self, ctx):
-        """Sets up a blacklist of words that will be deleted once said"""
-        await ctx.send("```Usage: m! wordblacklist add <word>\n!wordblacklist remove <word>\n!wordblacklist show```")
-
-    @word_blacklist.command(name="add")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def add_word(self, ctx, *, blacklist_words: list):
-        if len(blacklist_words) <= 0:
-            await ctx.send("You need to specify a word/words to blacklist")
-
-        for bl_word in blacklist_words:
-            slug_word = await self.do_slugify(bl_word)
-
-            if slug_word in self.blacklist_words:
-                await ctx.send(f"{slug_word} is already in your blacklist!")
-                continue
-
-            self.blacklist_words[f'{slug_word}']
-            await self.update_json('config.json', self.blacklist_words)
-
-    @word_blacklist.command(name="remove")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def remove_word(self, ctx, *, remove_words: list):
-        if len(remove_words) <= 0:
-            await ctx.send("You need to specify a word/words to remove")
-
-        for remove_word in remove_words:
-            slug_word = await self.do_slugify(remove_word)
-
-            if slug_word not in self.blacklist_words:
-                await ctx.send(f"{slug_word} is not in the blacklist")
-                continue
-
-            self.blacklist_words[f'{slug_word}'].pop()
-            await self.update_json('config.json', self.blacklist_words)
-
-    @word_blacklist.command(name="list")
-    @commands.guild_only()
-    async def list_words(self, ctx):
-        if len(self.blacklist_words) <= 0:
-            await ctx.send("You don't have any blacklisted words!")
-        else:
-            await ctx.send("Heres a list of the words " + "` `".join(self.blacklist_words))
-
-    @commands.group(name="linkblacklist", aliases=['lbl'], invoke_without_command=True, description="m! linklacklist <add/remove> <links>")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def link_blacklist(self, ctx):
-        """Sets up a blacklist of words that will be deleted once said"""
-        await ctx.send("```Usage: m! linkblacklist add <link>\nm! linkblacklist remove <link>\nm! linkblacklist show```")
-
-    @link_blacklist.command(name="add")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def add_link(self, ctx, *, add_links: list):
-        if len(add_links) <= 0:
-            await ctx.send("You need to specify a word/words to add")
-
-        for add_link in add_links:
-            slug_word = await self.do_slugify(add_link)
-
-            if slug_word in self.blacklist_links:
-                await ctx.send(f"{slug_word} is already in the blacklist")
-                continue
-
-            self.blacklist_links[f'{self.blacklist_links}']
-            await self.update_json('config.json', self.blacklist_links)
-
-    @link_blacklist.command(name="remove")
-    @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def remove_link(self, ctx, *, remove_links: list):
-        if len(remove_links) <= 0:
-            await ctx.send("Please specify a link/links to remove")
-
-        for remove_link in remove_links:
-            slug_word = self.do_slugify(remove_link)
-
-            if slug_word not in self.blacklist_links:
-                await ctx.send(f"{slug_word} is not in your blacklist")
-                continue
-
-            self.blacklist_links[f'{slug_word}'].pop()
-            await self.update_json('config.json', self.blacklist_links)
-
-    @link_blacklist.command(name="list")
-    @commands.guild_only()
-    async def list_links(self, ctx):
-        if len(self.blacklist_links) <= 0:
-            await ctx.send("You don't have any blacklisted links!")
-        else:
-            await ctx.send("Heres a list of the links " + "` `".join(self.blacklist_links))
 
     # Cog Listeners
     @commands.Cog.listener()
@@ -382,7 +149,7 @@ class Util(commands.Cog, name="Utility"):
 
             if self.users[f'{user.id}']['msg'] is True:
                 await channel.send(f"{user.mention} just leveled up to level {self.users[f'{user.id}']['lvl']} \n"
-                                   f":information_source: `y! disabletext` to disable this message")
+                                   f":information_source: `megu disabletext` to disable this message")
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -398,7 +165,15 @@ class Util(commands.Cog, name="Utility"):
 
     @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages):
-        await self.logging.send(f"{len(messages)} messages deleted in {messages.channel.mention}")
+
+        emb = discord.Embed(color=0xbc25cf)
+        emb.add_field(name="Bulk Delete",
+                      value=f"💣Messages Deleted: {len(messages)} \n"
+                      f"💬Channel: {messages.channel}",
+                      inline=False
+                      )
+
+        await self.logging.send(embed=emb)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -407,10 +182,10 @@ class Util(commands.Cog, name="Utility"):
 
         emb = discord.Embed(color=0xbc25cf)
         emb.add_field(name="Message Deleted",
-                      value=f"💮UserName: {message.author.display_name} \n"
-                      f"💮Ping: {message.author.mention} \n"
-                      f"💮ID: {message.author.id} \n"
-                      f"💮Channel: {message.channel}",
+                      value=f"👤**UserName:** {message.author.display_name} \n"
+                      f"🔔**Ping:** {message.author.mention} \n"
+                      f"💳**ID:** {message.author.id} \n"
+                      f"💬**Channel**: {message.channel}",
                       inline=False
                       )
         emb.add_field(name="Message", value=message.content)
@@ -427,10 +202,10 @@ class Util(commands.Cog, name="Utility"):
         emb = discord.Embed(
             color=0xbc25cf, timestamp=datetime.datetime.utcnow())
         emb.add_field(name="Message Edited",
-                      value=f"💮**UserName:** {before.author.display_name} \n"
-                      f"💮**Ping:** {before.author.mention} \n"
-                      f"💮**ID:** {before.author.id} \n"
-                      f"💮**URL:** **[Jump To Message]({after.jump_url})**",
+                      value=f"👤**UserName:** {before.author.display_name} \n"
+                      f"🔔**Ping:** {before.author.mention} \n"
+                      f"💳**ID:** {before.author.id} \n"
+                      f"💬**URL:** **[Jump To Message]({after.jump_url})**",
                       inline=False
                       )
         emb.add_field(name="Before", value=before.content, inline=True)

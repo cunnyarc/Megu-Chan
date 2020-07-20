@@ -8,12 +8,12 @@ import json
 with open("secrets.json", "r") as f:
     secrets = json.load(f)
 
-with open("server.json") as f:
-    users = json.load(f)
+with open("config.json") as f:
+    config = json.load(f)
 
 client = commands.Bot(commands.when_mentioned_or(
-    *['m! ', 'm!']), description=secrets["Masumi-Description"])
-token = secrets["Masumi-Token"]
+    *config["prefix"]), description=secrets["Megu-Description"])
+token = secrets["Megu-Token"]
 client.remove_command('help')
 start_time = datetime.datetime.utcnow()
 
@@ -34,8 +34,6 @@ async def on_ready():
 
     # Printing when successfully logged in
     await client.wait_until_ready()
-    global logging
-    logging = client.get_channel(657975745389527051)
     print(f"Successfully logged into {client.user.name}")
     await client.change_presence(activity=discord.Game("m! help"))
 
