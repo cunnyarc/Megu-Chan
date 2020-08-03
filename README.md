@@ -1,7 +1,7 @@
 <h2>Megu-Chan</h2>
 <p>A Multi-Purpose Discord Bot for my Server <a href=https://discord.gg/ZxbYHEh>Y.A.A.S</a></p>
 
-![Twitter Follow](https://img.shields.io/twitter/follow/glitchychan?label=Follow&style=social)
+[![Twitter Follow](https://img.shields.io/twitter/follow/glitchychan?label=Follow&style=social)](https://twitter.com/glitchychan)
 [![Discord](https://discordapp.com/api/guilds/620368672728416265/widget.png)](https://discord.gg/ZxbYHEh)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 ![GitHub](https://img.shields.io/github/license/Glitchy-Chan/Megu-Chan)
