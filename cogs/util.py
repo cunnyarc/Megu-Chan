@@ -35,15 +35,14 @@ class Util(commands.Cog, name="Utility"):
 
     @commands.command(name="help", description="`megu help [Command]`")
     @commands.bot_has_permissions(embed_links=True, send_messages=True)
-    async def help(self, ctx, cog: str = None):
+    async def help(self, ctx, cog="All"):
         """Sends help"""
-        cog = "All" if not cog else cog
         cog = cog.capitalize()
 
         # Shows all commands if no argument was given
         if cog == "All":
             emb = discord.Embed(color=0xbc25cf,
-                                description="**Hello there! I'm Masumi-Chan!** \n Below you can see a list of commands that I know. \n")
+                                description="**Hello there! I'm Megumin!** \n Below you can see a list of commands that I know. \n")
 
             for c in self.client.cogs:
                 if c == "Dev":
@@ -60,12 +59,16 @@ class Util(commands.Cog, name="Utility"):
         elif cog in self.client.cogs:
             emb = discord.Embed(color=0xbc25cf, title=f"Help with {cog}")
 
+            messages = []
             for c in self.client.get_cog(cog).get_commands():
                 if not c.hidden:
                     command = f'{c.name}'
-                    message = c.short_doc
+                    help_message = c.short_doc
+                    messages.append(f"**{command}** - {help_message}")
 
-                    emb.add_field(name=command, value=message, inline=False)
+            message = " \n".join(messages)
+            emb.add_field(name="Commands", value=message, inline=False)
+            emb.set_footer(text="Use: megu help <command> to get more info")
 
         # Shows command's info and usage if the argument wasn't a cog
         else:
@@ -73,20 +76,18 @@ class Util(commands.Cog, name="Utility"):
                 c.name for c in self.client.commands if not c.hidden]
             cog_lo = cog.lower()
 
-            if cog.lower() in all_commands:
+            if cog_lo in all_commands:
                 emb = discord.Embed(color=0xbc25cf, title=f'{cog_lo} command')
 
                 emb.add_field(
                     name="Usage:", value=self.client.get_command(cog_lo).description)
                 emb.add_field(name="Description:",
                               value=self.client.get_command(cog_lo).short_doc)
-
+                emb.set_footer(text="<> = Required, [] = Optional")
             # Shows an error message if the given argument fails all statements
             else:
                 emb = discord.Embed(color=discord.Color.red(), title="Error!",
                                     description=f"404 {cog} not found ¯\_(ツ)_/¯")
-
-        emb.set_footer(text="<> = Required, [] = Optional")
 
         await ctx.send(embed=emb)
 
@@ -113,13 +114,16 @@ class Util(commands.Cog, name="Utility"):
 
         for link in self.blacklist_links:
             if link in message.content:
-                try:
-                    await message.delete()
-                    await self.logging.send("An invite was sent")
+                if message.author.guild_permissions.manage_guild:
                     return
-                except Exception as e:
-                    await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
-                    return
+                else:
+                    try:
+                        await message.delete()
+                        await self.logging.send("An invite was sent")
+                        return
+                    except Exception as e:
+                        await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
+                        return
 
         await self.update_data(message.author)
         await self.lvl_up(message.author, message.channel)
@@ -145,7 +149,7 @@ class Util(commands.Cog, name="Utility"):
             self.users[f'{user.id}']['lvl'] += 1
             self.users[f'{user.id}']['exp'] = 0
 
-            self.update_json('server.json', self.users)
+            await self.update_json('server.json', self.users)
 
             if self.users[f'{user.id}']['msg'] is True:
                 await channel.send(f"{user.mention} just leveled up to level {self.users[f'{user.id}']['lvl']} \n"
@@ -185,7 +189,7 @@ class Util(commands.Cog, name="Utility"):
                       value=f"👤**UserName:** {message.author.display_name} \n"
                       f"🔔**Ping:** {message.author.mention} \n"
                       f"💳**ID:** {message.author.id} \n"
-                      f"💬**Channel**: {message.channel}",
+                      f"💬**Channel**: {message.channel.mention}",
                       inline=False
                       )
         emb.add_field(name="Message", value=message.content)

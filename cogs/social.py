@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands
 import json
 import random
-import datetime
+
 
 class Social(commands.Cog, name="Social"):
     """:performing_arts: Social"""
+
     def __init__(self, client):
         self.client = client
 

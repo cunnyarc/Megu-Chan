@@ -1,4 +1,4 @@
 # Ignore the unimpoortant things
-.vscode/
 __pycache__/
 *.json
+.idea/

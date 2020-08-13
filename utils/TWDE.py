@@ -2,21 +2,19 @@ try:
     from requests_html import HTMLSession
 except ImportError:
     print("==============================================")
-    print("Please download reqests-html for this to work!")
+    print("Please download requests-html for this to work!")
     print("https://pypi.org/project/requests-html/")
 import requests
 
 '''
-Author : GlitchyChan
+Author : Glitchy-Chan
 '''
-
 
 
 class TWDE:
     def __init__(self):
         self.web = HTMLSession()
         self.source = self.web.get("https://www.thiswaifudoesnotexist.net/")
-
 
     def get_link(self):
         self.source.html.render()
@@ -31,7 +29,6 @@ class TWDE:
         image = f"http://{str(waifu)[23:-3]}"
 
         r = requests.get(image)
-        
 
         with open(f"./{location}/{str(waifu)[53:-3]}", 'wb') as im:
             for chunk in r:

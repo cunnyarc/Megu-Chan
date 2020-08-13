@@ -12,13 +12,24 @@ class Dev(commands.Cog, name="Dev", command_attrs=dict(hidden=True)):
         await ctx.send("Shutting down")
         await self.client.close()
 
-    @commands.group(name="extension", invoke_without_command=True)
+    @commands.group(name="extension", invoke_without_command=True, aliases=['ext'])
     @commands.is_owner()
     async def extension_group(self, ctx):
-        await ctx.send("Usage: ```m!extension [command] [extension]```")
+        await ctx.send("Usage: ```megu extension [command] [extension]```")
 
     @extension_group.command(name="load")
     async def load_subcommand(self, ctx, extension):
+        if extension.capitalize() == "All":
+            for e in os.listdir("./cogs"):
+                if "__pycache__" or 'dev.py' in e:
+                    continue
+                else:
+                    try:
+                        self.client.load_extension(f"cogs.{e[:-3]}")
+                        print(f"Successfully loaded {e[:-3]}")
+                    except Exception as e:
+                        print(f"Error loading {e[:-3]}")
+                        continue
         try:
             self.client.load_extension("cogs.{}".format(extension))
             await ctx.send("Successfully loaded {}".format(extension))

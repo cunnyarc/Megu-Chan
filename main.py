@@ -1,21 +1,22 @@
 import discord
-from discord.ext import commands
 import os
 import datetime
-import utils
 import json
+from discord.ext import commands
 
+# Client Secrets and Tokens
 with open("secrets.json", "r") as f:
     secrets = json.load(f)
 
+# Client Configuration
 with open("config.json") as f:
     config = json.load(f)
 
+# Set up client status and login
 client = commands.Bot(commands.when_mentioned_or(
     *config["prefix"]), description=secrets["Megu-Description"])
 token = secrets["Megu-Token"]
 client.remove_command('help')
-start_time = datetime.datetime.utcnow()
 
 
 @client.event
@@ -35,7 +36,7 @@ async def on_ready():
     # Printing when successfully logged in
     await client.wait_until_ready()
     print(f"Successfully logged into {client.user.name}")
-    await client.change_presence(activity=discord.Game("m! help"))
+    await client.change_presence(activity=discord.Game("megu help"))
 
 
 @client.event
@@ -69,6 +70,9 @@ async def on_command_error(ctx, error):
         await ctx.send(embed=err_emb)
 
     if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(embed=err_emb)
+
+    if isinstance(error, commands.BadArgument):
         await ctx.send(embed=err_emb)
 
 if __name__ == "__main__":
