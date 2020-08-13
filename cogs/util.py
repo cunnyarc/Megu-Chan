@@ -1,32 +1,48 @@
 import discord
 import datetime
+import json
 from discord.ext import commands
-import main
+from slugify import slugify
 
 
 class Util(commands.Cog, name="Utility"):
     """⚙️ Utility"""
+
     def __init__(self, client):
         self.client = client
-        self.logging = main.logging_channel
+        with open('config.json') as config:
+            self.config = json.load(config)
 
-    @commands.command(name="userinfo")
-    async def user_info(self, ctx, member: discord.Member = None):
-        member = ctx.message.author if not member else member
+        self.logging = self.client.get_channel(self.config['log_channel'])
+        self.blacklist_words = self.config['blacklist_words']
+        self.blacklist_links = self.config['blacklist_links']
 
-        emb = discord.Embed(color=0xbc25cf)
+        with open('server.json') as f:
+            self.users = json.load(f)
 
-    @commands.command(name="help", description="`m! help [Command]`")
+    async def do_slugify(self, string):
+        string = slugify(string)
+        replacements = (('4', 'a'), ('@', 'a'), ('3', 'e'),
+                        ('1', 'i'), ('0', 'o'), ('7', 't'), ('5', 's'))
+        for old, new in replacements:
+            string = string.replace(old, new)
+
+        return string
+
+    async def update_json(self, file, data):
+        with open(file, 'w') as f:
+            json.dump(data, f, indent=4)
+
+    @commands.command(name="help", description="`megu help [Command]`")
     @commands.bot_has_permissions(embed_links=True, send_messages=True)
-    async def help(self, ctx, cog: str = None):
+    async def help(self, ctx, cog="All"):
         """Sends help"""
-        cog = "All" if not cog else cog
         cog = cog.capitalize()
 
         # Shows all commands if no argument was given
         if cog == "All":
             emb = discord.Embed(color=0xbc25cf,
-                                description="**Hello there! I'm Yuuki** \n Below you can see a list of commands that I know. \n")
+                                description="**Hello there! I'm Megumin!** \n Below you can see a list of commands that I know. \n")
 
             for c in self.client.cogs:
                 if c == "Dev":
@@ -36,168 +52,171 @@ class Util(commands.Cog, name="Utility"):
                               inline=False)
 
             emb.add_field(name="\u200b",
-                          value="**Use `y! help [Command | Category]` for more information.**\n \n"
-                                "**Example:** `y! help profile` **for detailed help for the profile command.**", inline=False)
+                          value="**Use `megu help [Command | Category]` for more information.**\n \n"
+                                "**Example:** `megu help profile` **for detailed help for the profile command.**", inline=False)
 
         # Shows the cog and the cog's command if the argument was a cog
         elif cog in self.client.cogs:
             emb = discord.Embed(color=0xbc25cf, title=f"Help with {cog}")
 
+            messages = []
             for c in self.client.get_cog(cog).get_commands():
                 if not c.hidden:
                     command = f'{c.name}'
-                    message = c.short_doc
+                    help_message = c.short_doc
+                    messages.append(f"**{command}** - {help_message}")
 
-                    emb.add_field(name=command, value=message, inline=False)
+            message = " \n".join(messages)
+            emb.add_field(name="Commands", value=message, inline=False)
+            emb.set_footer(text="Use: megu help <command> to get more info")
 
         # Shows command's info and usage if the argument wasn't a cog
         else:
-            all_commands = [c.name for c in self.client.commands if not c.hidden]
+            all_commands = [
+                c.name for c in self.client.commands if not c.hidden]
             cog_lo = cog.lower()
 
-            if cog.lower() in all_commands:
+            if cog_lo in all_commands:
                 emb = discord.Embed(color=0xbc25cf, title=f'{cog_lo} command')
 
-                emb.add_field(name="Usage:", value=self.client.get_command(cog_lo).description)
-                emb.add_field(name="Description:", value=self.client.get_command(cog_lo).short_doc)
-
+                emb.add_field(
+                    name="Usage:", value=self.client.get_command(cog_lo).description)
+                emb.add_field(name="Description:",
+                              value=self.client.get_command(cog_lo).short_doc)
+                emb.set_footer(text="<> = Required, [] = Optional")
             # Shows an error message if the given argument fails all statements
             else:
                 emb = discord.Embed(color=discord.Color.red(), title="Error!",
                                     description=f"404 {cog} not found ¯\_(ツ)_/¯")
 
-        emb.set_footer(text="<> = Required, [] = Optional")
-
         await ctx.send(embed=emb)
 
-    @commands.command(name="purge", description="`m! purge [Amount]`", aliases=['prune', 'clear'])
-    @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
-    async def clean(self, ctx, amount: int = None):
-        """I will delete a given amount of messages"""
-        for message in ctx.channel.history(before=ctx.message, limit=amount):
-            try:
-                if message.author == self.client.user:
-                    await discord.Message.delete(message)
+    # Cog Listeners
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
 
-            except discord.errors.NotFound:
-                break
+        if message.guild is None:
+            return
 
-    @commands.command(name="kick", description="`y! kick <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.Member, *, reason=None):
-        """Kicks a given user"""
-        if user == ctx.author:
-            await ctx.send("You cannot kick yourself!")
+        msg = await self.do_slugify(message.content)
 
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was kicked by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Kicked", icon_url=user.avatar_url)
+        for bl_word in self.blacklist_words:
+            if bl_word in msg:
+                try:
+                    await message.delete()
+                    await message.channel.send(f"{message.author.mention} your message was removed for containing a blacklisted word")
+                    return
+                except Exception as e:
+                    await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
+                    return
 
-        await user.kick(reason=reason)
-        await self.logging.send(embed=emb)
+        for link in self.blacklist_links:
+            if link in message.content:
+                if message.author.guild_permissions.manage_guild:
+                    return
+                else:
+                    try:
+                        await message.delete()
+                        await self.logging.send("An invite was sent")
+                        return
+                    except Exception as e:
+                        await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
+                        return
 
-    @commands.command(name="ban", description="`y! ban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, user: discord.Member, *, reason=None):
-        """Bans a given user"""
-        if user == ctx.author:
-            await ctx.send("You cannot ban yourself!")
+        await self.update_data(message.author)
+        await self.lvl_up(message.author, message.channel)
 
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was banned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Banned", icon_url=user.avatar_url)
+        self.users[f'{message.author.id}']['exp'] += 1
+        await self.update_json('server.json', self.users)
 
-        await user.ban(reason=reason, delete_message_days=1)
-        await self.logging.send(embed=emb)
+    async def update_data(self, user):
+        if f'{user.id}' not in self.users:
+            self.users[f'{user.id}'] = {}
+            self.users[f'{user.id}']['lvl'] = 1
+            self.users[f'{user.id}']['exp'] = 0
+            self.users[f'{user.id}']['resp'] = 0
+            self.users[f'{user.id}']['bal'] = 0
+            self.users[f'{user.id}']['msg'] = True
+            self.users[f'{user.id}']['inv'] = {}
 
-    @commands.command(name="unban", description="`y! unban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def unban(self, ctx, user: discord.Member, *, reason=None):
-        """Unbans a given user"""
+    async def lvl_up(self, user, channel):
+        cur_exp = self.users[f'{user.id}']['exp']
+        cur_lvl = self.users[f'{user.id}']['lvl']
 
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was unbanned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User Unbanned", icon_url=user.avatar_url)
+        if cur_exp >= cur_lvl * 43:
+            self.users[f'{user.id}']['lvl'] += 1
+            self.users[f'{user.id}']['exp'] = 0
 
-        await user.unban(reason=reason)
-        await self.logging.send(embed=emb)
+            await self.update_json('server.json', self.users)
 
-    @commands.command(name="softban", description="`y! softban <User>`")
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    async def softban(self, ctx, user: discord.Member, *, reason=None):
-        """Bans then unbans a user to clear their messages"""
-        if user == ctx.author:
-            await ctx.send("You cannot softban yourself!")
+            if self.users[f'{user.id}']['msg'] is True:
+                await channel.send(f"{user.mention} just leveled up to level {self.users[f'{user.id}']['lvl']} \n"
+                                   f":information_source: `megu disabletext` to disable this message")
 
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), description=f"{user} was softbanned by "
-                                                                                              f"{ctx.author} with reason"
-                                                                                              f"`{reason}`")
-        emb.set_author(name=":bangbang: User softbanned", icon_url=user.avatar_url)
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        if member.bot:
+            return
+        await self.logging.send(f"New member join {member.name}")
 
-        await user.ban(reason=reason, delete_message_days=7)
-        await user.unban(reason=reason)
-        await self.logging.send(embed=emb)
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        if member.bot:
+            return
+        await self.logging.send(f"Member left {member.name}")
 
-    @commands.command(name="mute", description="`y! mute <User>")
-    @commands.has_permissions(manage_messages=True)
-    async def mute(self, ctx, user: discord.Member, *, reason=None):
-        """Mutes the given user from sending any messages"""
-        if user == ctx.author:
-            await ctx.send("You cannot mute yourself!")
+    @commands.Cog.listener()
+    async def on_bulk_message_delete(self, messages):
 
-        role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-        if role is None:
-            await ctx.guild.create_role(name="Muted", reason="Bot Mute")
-            role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-            for c in ctx.guild.categories:
-                await c.set_permissions(role, send_messages=False, read_messages=True)
-
-        await user.add_roles(role, reason=reason)
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), title=":bangbang: User muted",
-                            description=f"{user} was muted by {ctx.author.mention} with reason `{reason}`")
-        emb.set_thumbnail(url=user.avatar_url)
+        emb = discord.Embed(color=0xbc25cf)
+        emb.add_field(name="Bulk Delete",
+                      value=f"💣Messages Deleted: {len(messages)} \n"
+                      f"💬Channel: {messages.channel}",
+                      inline=False
+                      )
 
         await self.logging.send(embed=emb)
 
-    @commands.command(name="unmute", description="`y! unmute <User>")
-    @commands.has_permissions(manage_messages=True)
-    async def unmute(self, ctx, user: discord.Member, *, reason=None):
-        """Unmutes the giver user"""
-        if user == ctx.author:
-            await ctx.send("You cannot unmute yourself")
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if message.author.bot:
+            return
 
-        role = discord.utils.get(ctx.guild.roles, name="Muted")
-
-        await user.remove_roles(role, reason=reason)
-
-        emb = discord.Embed(color=0xbc25cf, timestamp=datetime.datetime.utcnow(), title=":bangbang: User unmuted",
-                            description=f"{user} was unmuted by {ctx.author.mention} with reason `{reason}`")
-        emb.set_thumbnail(url=user.avatar_url)
+        emb = discord.Embed(color=0xbc25cf)
+        emb.add_field(name="Message Deleted",
+                      value=f"👤**UserName:** {message.author.display_name} \n"
+                      f"🔔**Ping:** {message.author.mention} \n"
+                      f"💳**ID:** {message.author.id} \n"
+                      f"💬**Channel**: {message.channel.mention}",
+                      inline=False
+                      )
+        emb.add_field(name="Message", value=message.content)
+        emb.set_footer(text=message.author)
+        emb.set_thumbnail(url=message.author.avatar_url)
 
         await self.logging.send(embed=emb)
 
-    @commands.command(name="refreshmute", description="`y! refreshmute", hidden=True)
-    @commands.has_permissions(mamage_messages=True)
-    async def refreshmute(self, ctx):
-        """Refreshes the mute command"""
-        role = await discord.utils.get(ctx.guild.roles, name="Muted")
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if before.author.bot or before.content == after.content:
+            return
 
-        for c in ctx.guild.categories:
-            await c.set_permissions(role, send_messages=False, read_messages=True)
+        emb = discord.Embed(
+            color=0xbc25cf, timestamp=datetime.datetime.utcnow())
+        emb.add_field(name="Message Edited",
+                      value=f"👤**UserName:** {before.author.display_name} \n"
+                      f"🔔**Ping:** {before.author.mention} \n"
+                      f"💳**ID:** {before.author.id} \n"
+                      f"💬**URL:** **[Jump To Message]({after.jump_url})**",
+                      inline=False
+                      )
+        emb.add_field(name="Before", value=before.content, inline=True)
+        emb.add_field(name="After", value=after.content, inline=True)
+        emb.set_footer(text=before.author)
+        emb.set_thumbnail(url=before.author.avatar_url)
 
-        emb = discord.Embed(color=0xbc25cf, title="Refreshed Mute Command!", description="The mute command has been "
-                                                                                         "refreshed")
         await self.logging.send(embed=emb)
 
 

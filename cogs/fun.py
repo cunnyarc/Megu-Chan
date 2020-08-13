@@ -3,11 +3,14 @@ from discord.ext import commands
 import asyncio
 import random
 
+
 class Fun(commands.Cog, name='Fun'):
+    """🎉 Fun"""
+
     def __init__(self, client):
         self.client = client
 
-    @commands.command(name="bigtext", description=">bigtext <text>")
+    @commands.command(name="bigtext", description="`megu bigtext <text>`")
     async def big_text(self, ctx, *, text: list):
         """Generates text with regional indicators"""
         for i in range(len(text)):
@@ -34,7 +37,7 @@ class Fun(commands.Cog, name='Fun'):
 
         await ctx.send("".join(text))
 
-    @commands.command(name="lenny", description="`y! lenny")
+    @commands.command(name="lenny", description="`megu lenny`")
     async def lenny(self, ctx):
         """Sends a lenny face"""
         message = ctx.message
@@ -42,36 +45,29 @@ class Fun(commands.Cog, name='Fun'):
         await discord.Message.delete(message)
         await ctx.send("( ͡° ͜ʖ ͡°)")
 
-    @commands.command(name="flip", description="`y! flip")
-    async def flip(self, ctx):
-        """Flips a coin"""
-
-        """ outcome = random.choice("heads", "tails")
-
-        flip = discord.Embed(color=0xbc25cf, title=f"{ctx.author.mention} flips a coin!",
-                             description="Pick heads or tails!")
-        reactions = ["regional_indicator_h", "regional_indicator_t"]
-
-        for r in reactions:
-            await self.client.add_reaction(flip, emoji=r) """
-
-    @commands.command(name="rateme", description="`y! rateme [user]`")
+    @commands.command(name="rateme", description="`megu rateme [user]`")
     async def rateme(self, ctx, user=None):
         """Rates a user from 1-10"""
         user = ctx.author if not user else user
         rating = random.randint(1, 10)
 
-        emb = discord.Embed(color=0xbc25cf, description=f"I rate {user.mention} a {rating}/10")
+        emb = discord.Embed(
+            color=0xbc25cf, description=f"I rate {user.mention} a {rating}/10")
         emb.set_image(url=user.avatar_url)
 
-    @commands.command(name="fortune", description="`y! fortune")
+        await ctx.send(embed=emb)
+
+    @commands.command(name="fortune", description="`megu fortune`")
     async def fortune(self, ctx, *, question=None):
         """It's an 8ball"""
 
         outcomes = ["Positive", "Neutral", "Negative"]
-        replyPos = ["It is certain!~", "Without a doubt!", "Definitely!", "Outlook good!"]
-        replyNeu = ["Reply hazy, try again later", "Ask again later", "Better not tell you now"]
-        replyNeg = ["Don't count on it...", "I'd say no...", "Very doubtful..."]
+        replyPos = ["It is certain!~", "Without a doubt!",
+                    "Definitely!", "Outlook good!"]
+        replyNeu = ["Reply hazy, try again later",
+                    "Ask again later", "Better not tell you now"]
+        replyNeg = ["Don't count on it baka...",
+                    "I'd say no...", "Very doubtful..."]
 
         if len(question) <= 5 or " " not in question:
             return
@@ -91,10 +87,12 @@ class Fun(commands.Cog, name='Fun'):
             color = discord.Color.red()
             outcome == random.choice(replyNeg)
 
-        emb = discord.Embed(color=color, description=outcome, title=f"🎱 {ctx.author.mention} Your Fortune Is...")
+        emb = discord.Embed(color=color, description=outcome,
+                            title=f"🎱 {ctx.author.mention} Your Fortune Is...")
         emb.set_image(url=ctx.author.avatar_url)
 
         await ctx.send(emb)
+
 
 def setup(client):
     client.add_cog(Fun(client))
