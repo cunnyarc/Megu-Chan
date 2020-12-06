@@ -20,7 +20,7 @@ class Mod(commands.Cog, name="Moderation"):
         self.logging = self.client.get_channel(self.config['log_channel'])
 
     @staticmethod
-    async def do_slugify(self, string):
+    async def do_slugify(string):
         string = slugify(string)
         replacements = (('4', 'a'), ('@', 'a'), ('3', 'e'),
                         ('1', 'i'), ('0', 'o'), ('7', 't'), ('5', 's'))
@@ -223,7 +223,7 @@ class Mod(commands.Cog, name="Moderation"):
 
     @prefix.command(name="add")
     @commands.guild_only()
-	@commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     async def prefix_add(self, ctx, prefix):
         if prefix in self.config['prefix']:
             await ctx.send(f"{prefix} is already in your prefixes")
@@ -237,7 +237,7 @@ class Mod(commands.Cog, name="Moderation"):
 
     @prefix.command(name="remove")
     @commands.guild_only()
-	@commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     async def prefix_remove(self, ctx, prefix):
         if prefix not in self.config['prefix']:
             await ctx.send(f'{prefix} is not in your prefixes')

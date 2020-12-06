@@ -20,7 +20,8 @@ class Util(commands.Cog, name="Utility"):
         with open('server.json') as f:
             self.users = json.load(f)
 
-    async def do_slugify(self, string):
+    @staticmethod
+    async def do_slugify(string):
         string = slugify(string)
         replacements = (('4', 'a'), ('@', 'a'), ('3', 'e'),
                         ('1', 'i'), ('0', 'o'), ('7', 't'), ('5', 's'))
@@ -100,6 +101,9 @@ class Util(commands.Cog, name="Utility"):
         if message.guild is None:
             return
 
+        if message.content.startswith(tuple(self.config['prefix'])):
+            return
+
         msg = await self.do_slugify(message.content)
 
         for bl_word in self.blacklist_words:
@@ -173,7 +177,7 @@ class Util(commands.Cog, name="Utility"):
         emb = discord.Embed(color=0xbc25cf)
         emb.add_field(name="Bulk Delete",
                       value=f"💣Messages Deleted: {len(messages)} \n"
-                      f"💬Channel: {messages.channel}",
+                            f"💬Channel: {messages.channel}",
                       inline=False
                       )
 
@@ -184,12 +188,15 @@ class Util(commands.Cog, name="Utility"):
         if message.author.bot:
             return
 
+        if message.content.startswith(tuple(self.config['prefix'])):
+            return
+
         emb = discord.Embed(color=0xbc25cf)
         emb.add_field(name="Message Deleted",
                       value=f"👤**UserName:** {message.author.display_name} \n"
-                      f"🔔**Ping:** {message.author.mention} \n"
-                      f"💳**ID:** {message.author.id} \n"
-                      f"💬**Channel**: {message.channel.mention}",
+                            f"🔔**Ping:** {message.author.mention} \n"
+                            f"💳**ID:** {message.author.id} \n"
+                            f"💬**Channel**: {message.channel.mention}",
                       inline=False
                       )
         emb.add_field(name="Message", value=message.content)
@@ -207,9 +214,9 @@ class Util(commands.Cog, name="Utility"):
             color=0xbc25cf, timestamp=datetime.datetime.utcnow())
         emb.add_field(name="Message Edited",
                       value=f"👤**UserName:** {before.author.display_name} \n"
-                      f"🔔**Ping:** {before.author.mention} \n"
-                      f"💳**ID:** {before.author.id} \n"
-                      f"💬**URL:** **[Jump To Message]({after.jump_url})**",
+                            f"🔔**Ping:** {before.author.mention} \n"
+                            f"💳**ID:** {before.author.id} \n"
+                            f"💬**URL:** **[Jump To Message]({after.jump_url})**",
                       inline=False
                       )
         emb.add_field(name="Before", value=before.content, inline=True)

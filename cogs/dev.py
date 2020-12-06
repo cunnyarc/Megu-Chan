@@ -1,5 +1,7 @@
-from discord.ext import commands
 import os
+
+import discord
+from discord.ext import commands
 
 
 class Dev(commands.Cog, name="Dev", command_attrs=dict(hidden=True)):
@@ -9,17 +11,21 @@ class Dev(commands.Cog, name="Dev", command_attrs=dict(hidden=True)):
     @commands.command(name="shutdown")
     @commands.is_owner()
     async def shutdown(self, ctx):
-        await ctx.send("Shutting down")
+        await ctx.send("Shutting down...")
         await self.client.close()
 
-    @commands.group(name="extension", invoke_without_command=True, aliases=['ext'])
+    @commands.group(name="cogs", invoke_without_command=True, aliases=['ext'])
     @commands.is_owner()
-    async def extension_group(self, ctx):
-        await ctx.send("Usage: ```megu extension [command] [extension]```")
+    async def cogs(self, ctx):
+        await ctx.send("```megu cogs [load/unload/reload] [cog]```")
 
-    @extension_group.command(name="load")
-    async def load_subcommand(self, ctx, extension):
-        if extension.capitalize() == "All":
+    @cogs.command(name="load")
+    async def load_cogs(self, ctx, ext=None):
+        ext = 'All' if not ext else ext
+
+        if ext == 'All':
+            success = []
+            failure = []
             for e in os.listdir("./cogs"):
                 if "__pycache__" or 'dev.py' in e:
                     continue
@@ -27,50 +33,87 @@ class Dev(commands.Cog, name="Dev", command_attrs=dict(hidden=True)):
                     try:
                         self.client.load_extension(f"cogs.{e[:-3]}")
                         print(f"Successfully loaded {e[:-3]}")
+                        success.append(e[:-3])
                     except Exception as e:
                         print(f"Error loading {e[:-3]}")
+                        failure.append(e[:-3])
                         continue
-        try:
-            self.client.load_extension("cogs.{}".format(extension))
-            await ctx.send("Successfully loaded {}".format(extension))
+            emb = discord.Embed(color=0xbc25cf, description=f"Successfully loaded: [{success}] \n"
+                                                            f"Failed to load: [{failure}]")
+            ctx.send(embed=emb)
 
-        except Exception as error:
-            await ctx.send("Error while loading {}: [{}]".format(extension, error))
-
-    @extension_group.command(name="unload")
-    async def unload_subcommand(self, ctx, extension):
-        try:
-            self.client.unload_extension("cogs.{}".format(extension))
-            await ctx.send("Successfully unloaded {}".format(extension))
-
-        except Exception as error:
-            await ctx.send("Error while unloading {}: [{}]".format(extension, error))
-
-    @extension_group.command(name="reload")
-    async def reload_subcommand(self, ctx, extension=None):
-        extension = "all" if not extension else extension
-
-        if extension == "all":
-            for e in os.listdir("./cogs"):
-                if "dev.py" or "__pycache__" in e:
-                    continue
-
-                try:
-                    self.client.unload_extension("cogs.{}".format(e[:-3]))
-                    self.client.load_extension("cogs.{}".format(e[:-3]))
-                    await ctx.send("Successfully reloaded {}".format(e[:-3]))
-
-                except Exception as error:
-                    await ctx.send("Error while reloading {}: [{}]".format(extension, error))
-                    continue
         else:
             try:
-                self.client.unload_extension("cogs.{}".format(extension))
-                self.client.load_extension("cogs.{}".format(extension))
-                await ctx.send("Successfully reloaded {}".format(extension))
+                self.client.load_extension(f"cogs.{ext}")
+                await ctx.send(f"Successfully loaded {ext}")
 
             except Exception as error:
-                await ctx.send("Error while reloading {}: [{}]".format(extension, error))
+                await ctx.send(f"Error while reloading {ext}: [{error}]")
+
+    @cogs.command(name="reload")
+    async def reload_cogs(self, ctx, ext=None):
+        ext = 'All' if not ext else ext
+
+        if ext == 'All':
+            success = []
+            failure = []
+            for e in os.listdir("./cogs"):
+                if "__pycache__" or 'dev.py' in e:
+                    continue
+                else:
+                    try:
+                        self.client.unload_extension(f"cogs.{e[:-3]}")
+                        self.client.load_extension(f"cogs.{e[:-3]}")
+                        print(f"Successfully loaded {e[:-3]}")
+                        success.append(e[:-3])
+                    except Exception as e:
+                        print(f"Error loading {e[:-3]}")
+                        failure.append(e[:-3])
+                        continue
+            emb = discord.Embed(color=0xbc25cf, description=f"Successfully reloaded: [{success}] \n"
+                                                            f"Failed to reload: [{failure}]")
+            ctx.send(embed=emb)
+
+        else:
+            try:
+                self.client.unload_extension(f"cogs.{ext}")
+                self.client.load_extension(f"cogs.{ext}")
+                await ctx.send(f"Successfully loaded {ext}")
+
+            except Exception as error:
+                await ctx.send(f"Error while reloading {ext}: [{error}]")
+
+    @cogs.command(name="unload")
+    async def unload_cogs(self, ctx, ext=None):
+        ext = 'All' if not ext else ext
+
+        if ext == 'All':
+            success = []
+            failure = []
+            for e in os.listdir("./cogs"):
+                if "__pycache__" or 'dev.py' in e:
+                    continue
+                else:
+                    try:
+                        self.client.unload_extension(f"cogs.{e[:-3]}")
+                        print(f"Successfully unloaded {e[:-3]}")
+                        success.append(e[:-3])
+                    except Exception as e:
+                        print(f"Error loading {e[:-3]}")
+                        failure.append(e[:-3])
+                        continue
+            emb = discord.Embed(color=0xbc25cf, description=f"Successfully unloaded: [{success}] \n"
+                                                            f"Failed to unload: [{failure}]")
+            ctx.send(embed=emb)
+
+        else:
+            try:
+                self.client.unload_extension(f"cogs.{ext}")
+                self.client.load_extension(f"cogs.{ext}")
+                await ctx.send(f"Successfully unloaded {ext}")
+
+            except Exception as error:
+                await ctx.send(f"Error while unloading {ext}: [{error}]")
 
 
 def setup(client):

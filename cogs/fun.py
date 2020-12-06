@@ -1,7 +1,10 @@
-import discord
-from discord.ext import commands
-import asyncio
+import json
 import random
+
+import discord
+import praw
+from discord.ext import commands
+from utils import nekoslife
 
 
 class Fun(commands.Cog, name='Fun'):
@@ -9,6 +12,43 @@ class Fun(commands.Cog, name='Fun'):
 
     def __init__(self, client):
         self.client = client
+
+        with open("./secrets.json") as f:
+            self.secrets = json.load(f)
+
+        self.reddit = praw.Reddit(
+            client_id=self.secrets["Megu-Reddit-ClientID"],
+            client_secret=self.secrets["Megu-Reddit-Secret"],
+            user_agent="Post Grabbing"
+        )
+
+    def get_post(self, sub: str):
+        try:
+            posts = [post for post in self.reddit.subreddit(sub).hot(limit=20)]
+            random_post_number = random.randint(0, 19)
+            random_post = posts[random_post_number]
+
+            post_name = random_post.title
+            post_comments = random_post.num_comments
+            post_likes = random_post.score
+            post_link = random_post.shortlink
+            post_image = random_post.url
+
+            return post_name, post_comments, post_likes, post_link, post_image
+
+        except Exception:
+            return
+
+    @commands.command(name="animeme", description="`megu animeme`")
+    async def animeme(self, ctx):
+        """Gets a random post from r/goodanimemes"""
+        data = self.get_post('goodanimemes')
+
+        emb = discord.Embed(color=0xbc25cf, description=f"**[{data[0]}]({data[3]})**")
+        emb.set_image(url=data[4])
+        emb.set_footer(text=f"💬{data[1]} | ❤ {data[2]}")
+
+        await ctx.send(embed=emb)
 
     @commands.command(name="bigtext", description="`megu bigtext <text>`")
     async def big_text(self, ctx, *, text: list):
@@ -57,41 +97,21 @@ class Fun(commands.Cog, name='Fun'):
 
         await ctx.send(embed=emb)
 
-    @commands.command(name="fortune", description="`megu fortune`")
-    async def fortune(self, ctx, *, question=None):
+    @commands.command(name="fortune", description="`megu fortune <text>`")
+    async def fortune(self, ctx, *, question: str):
         """It's an 8ball"""
+        data = nekoslife.eightball()
+        emb = discord.Embed(
+            color=0xbc25cf, description=question,
+            title=data['text'])
+        emb.set_thumbnail(url=data['url'])
+        await ctx.send(embed=emb)
 
-        outcomes = ["Positive", "Neutral", "Negative"]
-        replyPos = ["It is certain!~", "Without a doubt!",
-                    "Definitely!", "Outlook good!"]
-        replyNeu = ["Reply hazy, try again later",
-                    "Ask again later", "Better not tell you now"]
-        replyNeg = ["Don't count on it baka...",
-                    "I'd say no...", "Very doubtful..."]
-
-        if len(question) <= 5 or " " not in question:
-            return
-
-        # Outcome generator
-        outcome = random.choice(outcomes)
-
-        if outcome == "Positive":
-            color = discord.Color.green()
-            outcome = random.choice(replyPos)
-
-        if outcome == "Neutral":
-            color = 0xffff00
-            outcome = random.choice(replyNeu)
-
-        if outcome == "Negative":
-            color = discord.Color.red()
-            outcome == random.choice(replyNeg)
-
-        emb = discord.Embed(color=color, description=outcome,
-                            title=f"🎱 {ctx.author.mention} Your Fortune Is...")
-        emb.set_image(url=ctx.author.avatar_url)
-
-        await ctx.send(emb)
+    @commands.command(name="owoify", description="`megu owoify <text>")
+    async def owoify(self, ctx, *, text: str):
+        """Will owoify any text given to it"""
+        owo = nekoslife.owoify(text)
+        await ctx.send(owo)
 
 
 def setup(client):

@@ -2,6 +2,8 @@ import discord
 import os
 import datetime
 import json
+import aiohttp
+from discord import Webhook, AsyncWebhookAdapter
 from discord.ext import commands
 
 # Client Secrets and Tokens
@@ -30,12 +32,12 @@ async def on_ready():
                 client.load_extension(f"cogs.{e[:-3]}")
                 print(f"Successfully loaded {e[:-3]}")
             except Exception as e:
-                print(f"Error loading {e[:-3]}")
+                print(f"Error loading {e}")
                 continue
 
     # Printing when successfully logged in
     await client.wait_until_ready()
-    print(f"Successfully logged into {client.user.name}")
+    print(f"Successfully logged into {client.user}")
     await client.change_presence(activity=discord.Game("megu help"))
 
 
