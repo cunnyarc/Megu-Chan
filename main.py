@@ -1,9 +1,8 @@
-import discord
-import os
 import datetime
 import json
-import aiohttp
-from discord import Webhook, AsyncWebhookAdapter
+import os
+
+import discord
 from discord.ext import commands
 
 # Client Secrets and Tokens
@@ -44,7 +43,7 @@ async def on_ready():
 @client.event
 async def on_command_error(ctx, error):
     # Creating error embed
-    err_emb = discord.Embed(color=discord.Color.red(), title="An Error Occurred", description=f"`{error}`",
+    err_emb = discord.Embed(color=discord.Color.red(), title="A Fucky Wucky Occurred", description=f"`{error}`",
                             timestamp=datetime.datetime.utcnow())
     err_emb.set_thumbnail(url=client.user.avatar_url)
 
@@ -76,6 +75,7 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, commands.BadArgument):
         await ctx.send(embed=err_emb)
+
 
 if __name__ == "__main__":
     client.run(token)

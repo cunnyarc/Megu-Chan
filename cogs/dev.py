@@ -78,7 +78,7 @@ class Dev(commands.Cog, name="Dev", command_attrs=dict(hidden=True)):
             try:
                 self.client.unload_extension(f"cogs.{ext}")
                 self.client.load_extension(f"cogs.{ext}")
-                await ctx.send(f"Successfully loaded {ext}")
+                await ctx.send(f"Successfully reloaded {ext}")
 
             except Exception as error:
                 await ctx.send(f"Error while reloading {ext}: [{error}]")

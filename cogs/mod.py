@@ -327,6 +327,84 @@ class Mod(commands.Cog, name="Moderation"):
             except Exception as error:
                 await ctx.send(f"An error occurred when trying to add a link: [{error}]")
 
+    @commands.group(name="wordblacklist", aliases=['wbl'], invoke_without_command=True,
+                    description="megu wordblacklist <add/remove> <words>")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def word_blacklist(self, ctx):
+        """Sets up a blacklist of words that will be deleted once said"""
+        if len(self.config['blacklist_words']) <= 0:
+            await ctx.send("You don't have any blacklisted words!")
+        else:
+            await ctx.send(f"Here's a list of the words `{self.config['blacklist_words']}`")
+
+    @word_blacklist.command(name="add")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def add_word(self, ctx, bl_word):
+        slug_word = await self.do_slugify(bl_word)
+
+        if slug_word in self.config['blacklist_words']:
+            await ctx.send(f"{bl_word} is already in your blacklist!")
+        else:
+            try:
+                self.config['blacklist_words'].append(f'{slug_word}')
+                await self.update_json('config.json', self.config)
+            except Exception as error:
+                await ctx.send(f"An error occurred when trying to add a word: [{error}]")
+
+    @word_blacklist.command(name="remove")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def remove_word(self, ctx, bl_word):
+        slug_word = await self.do_slugify(bl_word)
+
+        if slug_word not in self.config['blacklist_words']:
+            await ctx.send(f"{bl_word} is not in your blacklist!")
+        else:
+            try:
+                self.config['blacklist_words'].remove(f'{slug_word}')
+                await self.update_json('config.json', self.config)
+            except Exception as error:
+                await ctx.send(f"An error occurred when trying to remove a word: [{error}]")
+
+    @commands.group(name="bansubreddit", aliases=['bsr'], invoke_without_command=True,
+                    description="megu bansubreddit <add/remove> <subreddit>")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def bansubreddit(self, ctx):
+        """Sets up a blacklist of subreddits that can't be searched"""
+        if len(self.config['banned_reddits']) <= 0:
+            await ctx.send("You don't have any blacklisted subreddits!")
+        else:
+            await ctx.send(f"Here's a list of the subreddits `{self.config['banned_reddits']}`")
+
+    @bansubreddit.command(name="add")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def add_sub(self, ctx, bl_sub):
+        if bl_sub in self.config['banned_reddits']:
+            await ctx.send(f"{bl_sub} is already in your blacklist!")
+        else:
+            try:
+                self.config['banned_reddits'].append(f'{bl_sub}')
+                await self.update_json('config.json', self.config)
+            except Exception as error:
+                await ctx.send(f"An error occurred when trying to add a link: [{error}]")
+
+    @bansubreddit.command(name="remove")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def remove_sub(self, ctx, bl_sub):
+        if bl_sub not in self.config['banned_reddits']:
+            await ctx.send(f"{bl_sub} is not in your blacklist!")
+        else:
+            try:
+                self.config['banned_reddits'].remove(f'{bl_sub}')
+                await self.update_json('config.json', self.config)
+            except Exception as error:
+                await ctx.send(f"An error occurred when trying to add a link: [{error}]")
+
 
 def setup(client):
     client.add_cog(Mod(client))

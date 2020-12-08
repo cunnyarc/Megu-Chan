@@ -1,7 +1,5 @@
 import requests
 
-import errors
-
 neko = "https://nekos.life/api/v2"
 
 
@@ -32,18 +30,18 @@ def imgSFW(enpoint: str):
         "waifu": "/img/waifu"
     }
     if enpoint is None:
-        raise errors.EmptyArgument("Nyaa! You have to define a valid argument \n "
-                                   f"Arguements:{sfw}")
+        print("Nyaa! You have to define a valid argument \n "
+              f"Arguements:{sfw}")
 
     if enpoint not in sfw:
-        raise errors.InvalidArgument("Nyaa! That argument does not exist \n"
-                                     f"Arguements:{sfw}")
+        print("Nyaa! That argument does not exist \n"
+              f"Arguements:{sfw}")
 
     try:
         r = requests.get(f'{neko}/{sfw[enpoint]}').json()
 
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
     return r['url']
 
@@ -92,18 +90,18 @@ def imgNSFW(enpoint: str):
     }
 
     if enpoint is None:
-        raise errors.EmptyArgument("Nyaa! You have to define a valid argument \n "
-                                   f"Arguements:{nsfw}")
+        print("Nyaa! You have to define a valid argument \n "
+              f"Arguements:{nsfw}")
 
     if enpoint not in nsfw:
-        raise errors.InvalidArgument("Nyaa! That argument does not exist \n"
-                                     f"Arguements:{nsfw}")
+        print("Nyaa! That argument does not exist \n"
+              f"Arguements:{nsfw}")
 
     try:
         r = requests.get(f'{neko}/{nsfw[enpoint]}').json()
 
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
     return r['url']
 
@@ -115,13 +113,13 @@ def eightball():
 
 def owoify(text: str):
     if text is None:
-        raise errors.EmptyArgument("Nyaa! You have to give me some text to owoify")
+        print("Nyaa! You have to give me some text to owoify")
 
     try:
         r = requests.get(f'{neko}/owoify?text={text}').json()
 
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
     return r['owo']
 
@@ -131,7 +129,7 @@ def textcat():
         r = requests.get(f'{neko}/cat').json()
         return r['cat']
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
 
 def why():
@@ -139,7 +137,7 @@ def why():
         r = requests.get(f'{neko}/why').json()
         return r['why']
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
 
 def fact():
@@ -147,4 +145,4 @@ def fact():
         r = requests.get(f'{neko}/fact').json()
         return r['fact']
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)

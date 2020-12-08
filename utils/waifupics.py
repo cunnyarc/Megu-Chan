@@ -1,7 +1,5 @@
 import requests
 
-import errors
-
 waifu = "https://waifu.pics/api"
 
 
@@ -37,18 +35,18 @@ def imgSFW(endpoint: str):
     }
 
     if endpoint is None:
-        raise errors.EmptyArgument("Oi! You have to define a valid argument \n "
-                                   f"Arguements:{sfw}")
+        print("Oi! You have to define a valid argument \n "
+              f"Arguements:{sfw}")
 
     if endpoint not in sfw:
-        raise errors.InvalidArgument("Oi! That argument does not exist \n"
-                                     f"Arguements:{sfw}")
+        print("Oi! That argument does not exist \n"
+              f"Arguements:{sfw}")
 
     try:
         r = requests.get(f"{waifu}/{sfw[endpoint]}").json()
 
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
     return r['url']
 
@@ -62,17 +60,17 @@ def imgNSFW(endpoint: str):
     }
 
     if endpoint is None:
-        raise errors.EmptyArgument("Oi! You have to define a valid argument \n "
-                                   f"Arguements:{nsfw}")
+        print("Oi! You have to define a valid argument \n"
+              f"Arguements:{nsfw}")
 
-    if endpoint not in sfw:
-        raise errors.InvalidArgument("Oi! That argument does not exist \n"
-                                     f"Arguements:{nsfw}")
+    if endpoint not in nsfw:
+        print("Oi! That argument does not exist \n"
+              f"Arguements:{nsfw}")
 
     try:
         r = requests.get(f"{waifu}/{nsfw[endpoint]}").json()
 
     except Exception as e:
-        raise errors.NothingFound(e)
+        print(e)
 
     return r['url']
