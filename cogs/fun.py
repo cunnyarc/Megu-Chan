@@ -76,7 +76,6 @@ class Fun(commands.Cog, name='Fun'):
         if self.reddit.subreddit(subreddit).over18 and (ctx.channel.is_nsfw() is False):
             await ctx.send("Woah! That reddit is 18+ and you're not in a 18+ channel!")
             return
-
         data = await self.get_post(subreddit)
 
         emb = discord.Embed(color=0xbc25cf, description=f"**[{data[0]}]({data[3]})**")
@@ -149,12 +148,11 @@ class Fun(commands.Cog, name='Fun'):
             "( ͡☉ ͜ʖ ͡☉)",
             "( ͡° ͜V ͡°)"
         ]
-        lenny_face = lennies[random.randint(0, 16)]
         webhook_info = await self.get_webhook(ctx)
 
         lenny = Webhook.partial(webhook_info[0], webhook_info[1], adapter=RequestsWebhookAdapter())
         await discord.Message.delete(ctx.message)
-        lenny.send(lenny_face, username=ctx.author.display_name, avatar_url=ctx.author.avatar_url)
+        lenny.send(random.choice(lennies), username=ctx.author.display_name, avatar_url=ctx.author.avatar_url)
 
     @commands.command(name="rateme", description="`megu rateme [user]`")
     async def rateme(self, ctx, user=None):
@@ -182,11 +180,13 @@ class Fun(commands.Cog, name='Fun'):
     async def owoify(self, ctx, *, text: str):
         """Will owoify any text given to it"""
         owo = nekoslife.owoify(text)
+        faces = ['(・`ω´・)', ';;w;;', 'owo', 'UwU', '>w<', '^w^']
         webhook_info = await self.get_webhook(ctx)
 
         owoify_text = Webhook.partial(webhook_info[0], webhook_info[1], adapter=RequestsWebhookAdapter())
         await discord.Message.delete(ctx.message)
-        owoify_text.send(owo, username=ctx.author.display_name, avatar_url=ctx.author.avatar_url)
+        owoify_text.send(f"{owo} {random.choice(faces)}", username=ctx.author.display_name,
+                         avatar_url=ctx.author.avatar_url)
 
     @commands.command(name="cat", description="`megu cat")
     async def cat_face(self, ctx):

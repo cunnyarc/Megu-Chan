@@ -1,6 +1,8 @@
-import discord
 import datetime
 import json
+import asyncio
+
+import discord
 from discord.ext import commands
 from slugify import slugify
 
@@ -30,7 +32,8 @@ class Util(commands.Cog, name="Utility"):
 
         return string
 
-    async def update_json(self, file, data):
+    @staticmethod
+    async def update_json(file, data):
         with open(file, 'w') as f:
             json.dump(data, f, indent=4)
 
@@ -101,16 +104,16 @@ class Util(commands.Cog, name="Utility"):
         if message.guild is None:
             return
 
-        if message.content.startswith(tuple(self.config['prefix'])):
-            return
-
         msg = await self.do_slugify(message.content)
 
         for bl_word in self.blacklist_words:
             if bl_word in msg:
                 try:
                     await message.delete()
-                    await message.channel.send(f"{message.author.mention} your message was removed for containing a blacklisted word")
+                    removed = await message.channel.send(
+                        f"{message.author.mention} your message was removed for containing a blacklisted word")
+                    await asyncio.sleep(5)
+                    await removed.delete()
                     return
                 except Exception as e:
                     await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
@@ -128,6 +131,9 @@ class Util(commands.Cog, name="Utility"):
                     except Exception as e:
                         await self.logging.send(f"Error trying to remove message {type(e).__name__}: {e}")
                         return
+
+        if message.content.startswith(tuple(self.config['prefix'])):
+            return
 
         await self.update_data(message.author)
         await self.lvl_up(message.author, message.channel)

@@ -5,6 +5,15 @@ import os
 import discord
 from discord.ext import commands
 
+intents = discord.Intents.all()
+intents.members = True
+intents.webhooks = True
+intents.guilds = True
+intents.bans = True
+intents.messages = True
+intents.reactions = True
+
+
 # Client Secrets and Tokens
 with open("secrets.json", "r") as f:
     secrets = json.load(f)
@@ -15,7 +24,9 @@ with open("config.json") as f:
 
 # Set up client status and login
 client = commands.Bot(commands.when_mentioned_or(
-    *config["prefix"]), description=secrets["Megu-Description"])
+    *config["prefix"]), description=secrets["Megu-Description"],
+    intents=intents
+)
 token = secrets["Megu-Token"]
 client.remove_command('help')
 
